@@ -1,0 +1,11 @@
+[pixiv]
+pixiv_id = #Your PixivID
+password = #Your Password
+
+[download]
+max_threads = 16
+
+[image]
+rank_type = R-18
+image_path = ./Image
+download_quantity = 100
