@@ -4,6 +4,8 @@ import pixiv
 import settings
 
 if __name__ == "__main__" :
+    print(settings.WELCOME)
+    print("当前版本：",settings.VERSION)
     d = download_image.Download(settings.RANK_TYPE)
     p = pixiv.Pixiv()
     p.login()

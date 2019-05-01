@@ -1,6 +1,7 @@
 import configparser
+import os
 
-config_path = "config.txt"
+config_path = os.path.join(os.getcwd(),"config.txt")
 cf = configparser.ConfigParser()
 cf.read(config_path)
 
@@ -14,3 +15,6 @@ DOWNLOAD_THREADS = cf.getint(section="download",option="max_threads")
 IMAGE_PATH = cf.get(section="image",option="image_path")
 
 DOWNLOAD_QUANTITY = cf.getint(section="image",option="download_quantity")
+
+WELCOME = "欢迎使用PixivRankDownload"
+VERSION = "1.0"

@@ -35,7 +35,7 @@ class Pixiv(object) :
         print("登陆完毕")
 
     def get_rank_list(self):
-        print("正在获取排行榜数据")
+        print("正在拉取排行榜数据")
         count = 1
         pid_list = []
         for page in range(1,self.quantity+1,50) :
@@ -44,8 +44,7 @@ class Pixiv(object) :
                 if item["rank"] < page + min(self.quantity,50) :
                     pid_list.append(item["illust_id"])
             count+=1
-        print("排行榜数据获取完成")
-        print("长度：",len(pid_list))
+        print("排行榜数据拉取完成")
         return pid_list
 
 if __name__ == "__main__" :
