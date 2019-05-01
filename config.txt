@@ -1,6 +1,6 @@
 [pixiv]
-pixiv_id = #Your PixivID
-password = #Your Password
+pixiv_id = NDE1Mzg2MzZlYzM1@foxmail.com
+password = 41538636ec35
 
 [download]
 max_threads = 16
