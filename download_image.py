@@ -1,5 +1,5 @@
 import requests
-import bs4
+import json
 import time
 import queue
 from threading import Thread
@@ -8,8 +8,10 @@ from settings import *
 from fake_useragent import UserAgent
 
 class Download(object) :
-    url_template = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id={pid}"
-    image_template = "https://i.pximg.net/img-original/img/{data}/{pid}_p{count}.{format}"
+    referer_template = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id={pid}"
+    img_info_url = "https://www.pixiv.net/ajax/illust/{pid}"
+    replace_template = "_p{page}"
+
     dir_path = os.path.join(IMAGE_PATH,"{date}/{type}")
     file_name = "{pid}_p{page}.{format}"
     headers = {"user-agent": UserAgent().random}
@@ -23,13 +25,15 @@ class Download(object) :
         self.gif_down = GIFDownload.GIFDownload()
         self.gif_down.set_log(False)
         self.gif_down.login()
+        self.date = ""
+        self.count = 0
+        self.failure = 0
+        self.data_size = -1
 
     def download(self,pid_list:list,block = True) :
         self.date = time.strftime("%Y-%m-%d", time.localtime())
         self.gif_down.set_path(self.dir_path.format(date=self.date,type=self.img_type))
 
-        self.count = 0
-        self.failure = 0
         self.data_size = len(pid_list)
         # self.fuck = pid_list
         # import copy
@@ -63,32 +67,40 @@ class Download(object) :
             os.makedirs(dir_path)
         file_name = os.path.join(dir_path,self.file_name)
 
-        headers = self.headers
-        res = requests.get(self.url_template.format(pid=pid),headers=headers)
-
-        soup = bs4.BeautifulSoup(res.text,"lxml")
-        try :
-            src_url = soup.find(class_="sensored").img["src"]
-        except TypeError :
+        if self.gif_down.isGIF(pid) :
             self.gif_down.download(pid)
         else :
-            time_data = src_url.split("/")[7:13]
-            image_format = src_url.split(".")[-1]
+            headers = self.headers.copy()
+            info_url = self.img_info_url.format(pid=pid)
+            res = requests.get(info_url, headers=headers)
+            js = json.loads(res.text)
+            img_url = js["body"]["urls"]["original"]
 
-            count = 0
+            count = -1
+            while True:
+                img_url = img_url.replace(self.replace_template.format(page=count), self.replace_template.format(page=count + 1))
+                res = requests.get(img_url, headers=headers)
+                count += 1
+                if res.status_code != 200:
+                    break
+                with open(str(count) + ".jpg", "wb+") as fp:
+                    fp.write(res.content)
+
+            count = -1
             while True :
-                headers["referer"] = self.url_template.format(pid=pid)
-                img_res = requests.get(url = self.image_template.format(data="/".join(time_data),pid=pid,count=count,format=image_format),
-                                       headers=headers,)
+                headers["referer"] = self.referer_template.format(pid=pid)
+                img_url = img_url.replace(self.replace_template.format(page=count), self.replace_template.format(page=count + 1))
+                img_res = requests.get(img_url, headers=headers)
                 if img_res.status_code != 200 :
                     break
+                image_format = img_url.split(".")[-1]
                 with open(file_name.format(pid=pid,page=count,format=image_format),"wb+") as fp :
                     fp.write(img_res.content)
                 count += 1
         self.count += 1
         print(pid,"下载完成。当前进度：",self.count,"/",self.data_size,)
-        # self.fuck.remove(pid)
-        # print("未被获取数据：",self.shit)
-        # print("未下载完成数据：",self.fuck)
+
 if __name__ == "__main__" :
+    # fuck = Download("r-18")
+    # getattr(fuck,"_download")(74478683)
     pass

@@ -6,6 +6,6 @@ password = 41538636ec35
 max_threads = 16
 
 [image]
-rank_type = R-18
+rank_type = normal
 image_path = ./Image
 download_quantity = 100

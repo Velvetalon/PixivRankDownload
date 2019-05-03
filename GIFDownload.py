@@ -1,7 +1,5 @@
-import requests
 import json
 import zipfile
-import os
 import imageio
 import bs4
 import requests
@@ -13,11 +11,10 @@ class GIFDownload(object) :
     login_data_url = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index"
     headers = {"user-agent": UserAgent().random}
     gif_info_url = "https://www.pixiv.net/ajax/illust/{pid}/ugoira_meta"
-    referer_url = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id={pid}"
+    referer_url = "https://www.pixiv.net/me"
     path = ""
 
     def __init__(self):
-        self.session = requests.session()
         self.log_flag = True
 
     def set_path(self,file_path = IMAGE_PATH):
@@ -40,7 +37,8 @@ class GIFDownload(object) :
 
     def login(self):
         self.log("正在登陆")
-        data = self.session.get(url=self.login_data_url,headers=self.headers).content.decode("utf8")
+        session = requests.session()
+        data = session.get(url=self.login_data_url,headers=self.headers).content.decode("utf8")
         post_key = bs4.BeautifulSoup(data,"lxml").find(attrs={"name":"post_key"})["value"]
         login_data = {
             "pixiv_id": PIXIV_ID,
@@ -50,8 +48,10 @@ class GIFDownload(object) :
             "ref": "wwwtop_accounts_index",
             "return_to": "https://www.pixiv.net/",
         }
-        self.session.post(url=self.login_post_url,data=login_data)
-        cookey = requests.utils.dict_from_cookiejar(self.session.cookies)
+        session.post(url=self.login_post_url,data=login_data)
+        session.close()
+
+        cookey = requests.utils.dict_from_cookiejar(session.cookies)
         cookie = ""
         for k,v in cookey.items() :
             cookie += k + "=" + v + "; "
@@ -75,19 +75,26 @@ class GIFDownload(object) :
             self.download(pid)
             print(pid,"下载成功")
 
+    def isGIF(self,pid):
+        headers = self.headers.copy()
+        headers["referer"] = self.referer_url.format(pid=pid)
+        gif_info = json.loads(requests.get(self.gif_info_url.format(pid=pid), headers=headers).text)
+        return not gif_info["error"]
+
     def download(self,pid):
-        self.headers["referer"] = self.referer_url.format(pid=pid)
+        headers = self.headers.copy()
+        headers["referer"] = self.referer_url.format(pid=pid)
         file_path = os.path.join(self.path,str(pid))
 
         self.log("开始下载")
         #获取gif信息，提取zip url
-        gif_info = json.loads(requests.get(self.gif_info_url.format(pid=pid), headers=self.headers).text)
+        gif_info = json.loads(requests.get(self.gif_info_url.format(pid=pid), headers=headers).text)
         delay = [item["delay"] for item in gif_info["body"]["frames"]]
         delay = sum(delay) / len(delay)
         zip_url = gif_info["body"]["originalSrc"]
 
         #下载压缩包
-        gif_data = requests.get(zip_url, headers=self.headers)
+        gif_data = requests.get(zip_url, headers=headers)
         gif_data=gif_data.content
         try :
             os.mkdir(file_path)
@@ -120,5 +127,5 @@ class GIFDownload(object) :
 if __name__ == "__main__" :
     test = GIFDownload()
     test.login()
-    test.show()
-    #main(73252345)
+    # test.show()
+    test.download(74455834)
