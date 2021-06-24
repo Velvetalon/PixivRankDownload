@@ -1,20 +1,22 @@
-import configparser
-import os
+COOKIE_FILE = "pixiv_cookie.ini"
 
-config_path = os.path.join(os.getcwd(),"config.txt")
-cf = configparser.ConfigParser()
-cf.read(config_path)
+# 下载线程数
+DOWNLOAD_THREADS = 4
 
-PIXIV_ID = cf.get(section="pixiv",option="pixiv_id")
-PASSWORD = cf.get(section="pixiv",option="password")
+# 每秒最大下载文件数。大于0时启用该设置。
+DOWNLOAD_SPEED = 0.5
 
-RANK_TYPE = cf.get(section="image",option="rank_type")
+# 代理信息
+PROXY_HOST = "127.0.0.1"
+PROXY_PORT = 1080
+USE_PROXY = True
 
-DOWNLOAD_THREADS = cf.getint(section="download",option="max_threads")
+# 下载计数。最大不超过150
+QUANTITY = 100
 
-IMAGE_PATH = cf.get(section="image",option="image_path")
-
-DOWNLOAD_QUANTITY = cf.getint(section="image",option="download_quantity")
+# 下载路径
+IMAGE_PATH = "./image"
 
 WELCOME = "欢迎使用PixivRankDownload"
 VERSION = "1.0"
+GITHUB = "https://github.com/Velvetalon/PixivRankDownload"
